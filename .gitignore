@@ -34,3 +34,6 @@
 # ROOT-Specific Files
 *.root
 *.xml
+*.pcm
+
+commands.txt
