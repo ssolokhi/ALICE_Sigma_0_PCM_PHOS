@@ -13,9 +13,8 @@ Run with 'aliroot runAnalysis.C' 4 times:
 #include "TSystem.h"
 
 void RunCaloResponseTask() {
-
-	Bool_t localRun = true;
-	Bool_t gridTest = true;
+	bool localRun = true;
+	bool gridTest = true;
 
 	gInterpreter->ProcessLine(".include $ROOTSYS/include");
 	gInterpreter->ProcessLine(".include $ALICE_ROOT/include");
@@ -56,9 +55,9 @@ void RunCaloResponseTask() {
 		alienHandler->AddRunNumber(256504);
 
 		alienHandler->SetSplitMaxInputFileNumber(30);
-		alienHandler->SetExecutable("myTask.sh");
+		alienHandler->SetExecutable("AliCaloResponseTask.sh");
 		alienHandler->SetTTL(10000);
-		alienHandler->SetJDLName("myTask.jdl");
+		alienHandler->SetJDLName("AliCaloResponseTask.jdl");
 		alienHandler->SetOutputToRunNo(kTRUE); //do you want a subfolder for each runnumber output?
 		alienHandler->SetKeepLogs(kTRUE);
 		alienHandler->SetMergeViaJDL(kTRUE);

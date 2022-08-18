@@ -13,10 +13,8 @@ class AliPIDResponce;
 class AliMultSelectionTask;
 
 class AliCaloResponse: public AliAnalysisTaskSE {
-
 	/* derived from the AliAnalysisTask class for Single Events*/
 	public:
-
 		AliCaloResponse();
 		AliCaloResponse(const char *name);
 
@@ -24,10 +22,11 @@ class AliCaloResponse: public AliAnalysisTaskSE {
 
 		virtual void UserCreateOutputObjects(); // For booking output histograms, TTrees, etc. to the .root file
 		virtual void UserExec(Option_t *option); // To be called for EACH event that passed the trigger
+		void GetPHOSSignal();
+		void GetPhotonConversionSignal();
 		virtual void Terminate(Option_t *option); // Called at the end of an analysis task
 
 	private:
-
 		AliCaloResponse(const AliCaloResponse&);
 		AliCaloResponse &operator=(const AliCaloResponse&);
 

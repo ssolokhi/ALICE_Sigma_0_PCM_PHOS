@@ -86,7 +86,6 @@ void AliCaloResponse::UserExec(Option_t *option) {
 	if (!fAOD) return;
 
 	int nTracks = fAOD->GetNumberOfTracks();
-	int nCaloClusters = fAOD->GetNumberOfCaloClusters();
 
 	fPIDResponse = mgr->GetInputEventHandler()->GetPIDResponse();
 
@@ -103,27 +102,36 @@ void AliCaloResponse::UserExec(Option_t *option) {
 		hSelectedEvents->Fill(1);
 
 		double electronSignal = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kElectron);
-		if (electronSignal > 6) continue;
+		if (electronSignal > 5) continue;
 		hElectronSignal->Fill(track->Pt(), electronSignal);
 		hSelectedEvents->Fill(2);
-
 	}
+
+	GetPHOSSignal();
+	GetPhotonConversionSignal();
+
+	PostData(1, fOutputList);
+}
+
+void AliCaloResponse::GetPHOSSignal() {
+	int nCaloClusters = fAOD->GetNumberOfCaloClusters();
 
 	for (int i = 0; i < nCaloClusters; ++i) {
 		AliAODCaloCluster *cluster = fAOD->GetCaloCluster(i);
 		if (!cluster) continue;
-		//if (cluster->GetType() != AliVCluster::kPHOSNeutral || cluster->GetNCells() < 3) continue;
+		if (cluster->GetType() != AliVCluster::kPHOSNeutral || cluster->GetNCells() < 1) continue;
 		hClusterEnergy->Fill(cluster->E());
 		hSelectedEvents->Fill(3);
 	}
+}
 
-	fV0ReaderV1=(AliV0ReaderV1*)AliAnalysisManager::GetAnalysisManager()->GetTask(fV0ReaderV1Name.Data());
+void AliCaloResponse::GetPhotonConversionSignal() {
+	fV0ReaderV1 = reinterpret_cast<AliV0ReaderV1*>(AliAnalysisManager::GetAnalysisManager()->GetTask(fV0ReaderV1Name.Data()));
 	if (!fV0ReaderV1) {
 		std::cout << "No photon candidate found!" << std::endl;
 		return;
 	}
 
-	PostData(1, fOutputList);
 }
 
 void AliCaloResponse::Terminate(Option_t *option) {}
