@@ -22,6 +22,7 @@
 #include "TChain.h"
 #include "TList.h"
 #include "TString.h"
+#include "TObject.h"
 #include "TH1F.h"
 #include "AliAODVertex.h"
 #include "AliPID.h"
@@ -33,15 +34,11 @@
 #include "AliAODCaloCluster.h"
 #include "AliV0ReaderV1.h"
 
-AliCaloResponse::AliCaloResponse(): AliAnalysisTaskSE(), fAOD(0), fOutputList(0), 
-hSelectedEvents(0), hEventPt(0), hVertexZ(0), hClusterEnergy(0), hReconstructedPhotons(0),
-hTPCResponse(0),
-fPIDResponse(0),fV0ReaderV1(0), fV0ReaderV1Name("fV0ReaderV1") {}
+AliCaloResponse::AliCaloResponse(): AliAnalysisTaskSE(), fAOD(nullptr), fOutputList(nullptr), 
+fPIDResponse(nullptr),fV0ReaderV1(nullptr) {}
 
-AliCaloResponse::AliCaloResponse(const char *name): AliAnalysisTaskSE(name), fAOD(0), fOutputList(0),
-hSelectedEvents(0), hEventPt(0), hVertexZ(0), hClusterEnergy(0), hReconstructedPhotons(0),
-hTPCResponse(0), 
-fPIDResponse(0), fV0ReaderV1(0), fV0ReaderV1Name("fV0ReaderV1") {
+AliCaloResponse::AliCaloResponse(const char *name): AliAnalysisTaskSE(name), fAOD(nullptr), fOutputList(nullptr),
+fPIDResponse(nullptr), fV0ReaderV1(nullptr) {
 	DefineInput(0, TChain::Class());
 	DefineOutput(1, TList::Class());
 }
@@ -54,26 +51,19 @@ void AliCaloResponse::UserCreateOutputObjects() {
 	fOutputList = new TList();
 	fOutputList->SetOwner(kTRUE);
 
-	hSelectedEvents = new TH1F("hSelectedEvents", "Number Of Selected Events", 5, 0, 5);
-	fOutputList->Add(hSelectedEvents);
+	fOutputList->Add(new TH1F("hSelectedEvents", "Number Of Selected Events", 5, 0, 5));
 
-	hEventPt = new TH1F("hEventPt", "Event Transverse Momentum", 100, 0, 5);
-	fOutputList->Add(hEventPt);
+	fOutputList->Add(new TH1F("hEventPt", "Event Transverse Momentum", 100, 0, 5));
 
-	hVertexZ = new TH1F("hVertexZ", "Vertex Z-Coordinate", 100, -20, 20);
-	fOutputList->Add(hVertexZ);
+	fOutputList->Add(new TH1F("hVertexZ", "Vertex Z-Coordinate", 100, -20, 20));
 
-	hClusterEnergy = new TH1F("hClusterEnergy", "Cluster Energy", 100, 0, 25);
-	fOutputList->Add(hClusterEnergy);
+	fOutputList->Add(new TH1F("hClusterEnergy", "Cluster Energy", 100, 0, 25));
 
-	hReconstructedPhotons = new TH1F("hReconstructedPhotons", "Number Of Reconstructed Photons", 25, 0, 25);
-	fOutputList->Add(hReconstructedPhotons);
+	fOutputList->Add(new TH1F("hReconstructedPhotons", "Number Of Reconstructed Photons", 25, 0, 25));
 
-	hTPCResponse = new TH2F("hTPCResponse", "TPC Response", 100, 0, 4, 250, 0, 250);
-	fOutputList->Add(hTPCResponse);
+	fOutputList->Add(new TH2F("hTPCResponse", "TPC Response", 100, 0, 4, 250, 0, 250));
 
-	hElectronSignal = new TH2F("hElectronSignal", "Electron Signal", 100, 0, 4, 100, -10, 10);
-	fOutputList->Add(hElectronSignal);
+	fOutputList->Add(new TH2F("hElectronSignal", "Electron Signal", 100, 0, 4, 100, -10, 10));
 
 	PostData(1, fOutputList);
 }
@@ -92,19 +82,20 @@ void AliCaloResponse::UserExec(Option_t *option) {
 	for (int i = 0; i < nTracks; ++i) {
 		AliAODTrack *track = static_cast<AliAODTrack*>(fAOD->GetTrack(i));
 		if (!track || !track->TestFilterBit(1)) continue; // 1 stands for minimum bias trigger
-		hEventPt->Fill(track->Pt());
-		hTPCResponse->Fill(track->P(), track->GetTPCsignal());
-		hSelectedEvents->Fill(0);
+		FillHistogram("hEventPt", track->Pt());
+		FillHistogram("hTPCResponse", track->P(), track->GetTPCsignal());
+		FillHistogram("hSelectedEvents", 0);
 
 		double vertexZ = fAOD->GetPrimaryVertex()->GetZ();
 		if ((vertexZ < -20) || (vertexZ > 20)) continue;
-		hVertexZ->Fill(vertexZ);
-		hSelectedEvents->Fill(1);
+		FillHistogram("hVertexZ", vertexZ);
+		FillHistogram("hSelectedEvents", 1);
 
 		double electronSignal = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kElectron);
 		if (electronSignal > 5) continue;
-		hElectronSignal->Fill(track->Pt(), electronSignal);
-		hSelectedEvents->Fill(2);
+		FillHistogram("hElectronSignal", track->Pt(), electronSignal);
+		FillHistogram("hSelectedEvents", 2);
+
 	}
 
 	GetPHOSSignal();
@@ -120,18 +111,30 @@ void AliCaloResponse::GetPHOSSignal() {
 		AliAODCaloCluster *cluster = fAOD->GetCaloCluster(i);
 		if (!cluster) continue;
 		if (cluster->GetType() != AliVCluster::kPHOSNeutral || cluster->GetNCells() < 1) continue;
-		hClusterEnergy->Fill(cluster->E());
-		hSelectedEvents->Fill(3);
+		FillHistogram("hClusterEnergy", cluster->E());
+		FillHistogram("hSelectedEvents", 3);
+
 	}
 }
 
 void AliCaloResponse::GetPhotonConversionSignal() {
-	fV0ReaderV1 = reinterpret_cast<AliV0ReaderV1*>(AliAnalysisManager::GetAnalysisManager()->GetTask(fV0ReaderV1Name.Data()));
-	if (!fV0ReaderV1) {
-		std::cout << "No photon candidate found!" << std::endl;
-		return;
-	}
+	TString photonCutNumberV0Reader = "060000084001001500000000";
+	TString cutNumberPhoton = photonCutNumberV0Reader.Data();
+	TString cutNumberEvent = "00000003";
+	TString fV0ReaderV1Name = Form("V0ReaderV1_%s_%s", cutNumberEvent.Data(), cutNumberPhoton.Data());
+	AliV0ReaderV1 *fV0ReaderV1 = reinterpret_cast<AliV0ReaderV1*>(AliAnalysisManager::GetAnalysisManager()->GetTask(fV0ReaderV1Name.Data()));
+	//if (!fV0ReaderV1) *fV0ReaderV1 = new AliV0ReaderV1(fV0ReaderV1Name.Data());
+	FillHistogram("hReconstructedPhotons", 1);
+}
 
+void AliCaloResponse::FillHistogram(const TString key, const double value) {
+	TObject *obj = fOutputList->FindObject(key);
+	if (obj) dynamic_cast<TH1F*>(obj)->Fill(value);
+}
+
+void AliCaloResponse::FillHistogram(const TString key, const double value_x, const double value_y) {
+	TObject *obj = fOutputList->FindObject(key);
+	if (obj) dynamic_cast<TH2F*>(obj)->Fill(value_x, value_y);
 }
 
 void AliCaloResponse::Terminate(Option_t *option) {}

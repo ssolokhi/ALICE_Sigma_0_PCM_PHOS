@@ -24,6 +24,8 @@ class AliCaloResponse: public AliAnalysisTaskSE {
 		virtual void UserExec(Option_t *option); // To be called for EACH event that passed the trigger
 		void GetPHOSSignal();
 		void GetPhotonConversionSignal();
+		void FillHistogram(const TString key, const double value);
+		void FillHistogram(const TString key, const double value_x, const double value_y);
 		virtual void Terminate(Option_t *option); // Called at the end of an analysis task
 
 	private:
@@ -37,17 +39,7 @@ class AliCaloResponse: public AliAnalysisTaskSE {
 		AliAODEvent *fAOD;
 		TList *fOutputList;
 
-		TH1F *hSelectedEvents;
-		TH1F *hEventPt;
-		TH1F *hVertexZ;
-		TH1F *hClusterEnergy;
-		TH1F *hReconstructedPhotons;
-
-		TH2F *hTPCResponse;
-		TH2F *hElectronSignal;
-
 		AliPIDResponse *fPIDResponse;
 		AliV0ReaderV1 *fV0ReaderV1;
-		TString fV0ReaderV1Name;
 };
 #endif
