@@ -24,8 +24,8 @@ class AliCaloResponse: public AliAnalysisTaskSE {
 		virtual void UserExec(Option_t *option); // To be called for EACH event that passed the trigger
 		void GetPHOSSignal();
 		void GetPhotonConversionSignal();
-		void FillHistogram(const TString key, const double value);
-		void FillHistogram(const TString key, const double value_x, const double value_y);
+		void FillHistogram(const TString &key, const double &value);
+		void FillHistogram(const TString &key, const double &value_x, const double &value_y);
 		virtual void Terminate(Option_t *option); // Called at the end of an analysis task
 
 	private:
@@ -40,6 +40,5 @@ class AliCaloResponse: public AliAnalysisTaskSE {
 		TList *fOutputList;
 
 		AliPIDResponse *fPIDResponse;
-		AliV0ReaderV1 *fV0ReaderV1;
 };
 #endif

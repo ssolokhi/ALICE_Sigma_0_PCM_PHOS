@@ -35,5 +35,6 @@
 *.root
 *.xml
 *.pcm
+*.in
 
 commands.txt
