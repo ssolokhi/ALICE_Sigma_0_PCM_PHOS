@@ -1,17 +1,17 @@
 #include "AliVEvent.h"
 
-AliCaloResponse *AddCaloResponseTask(TString name = "name") {
+AliAnalysisTaskSigma0PCMPHOS *AddSigma0PCMPHOSTask(TString name = "name") {
 	AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
 
 	if (!mgr || !mgr->GetInputEventHandler()) return 0x0;
 
 	TString fileName = AliAnalysisManager::GetCommonFileName();
-	fileName += ":AliCaloResponse"; // creates a folder in the ROOT file
+	fileName += ":AliAnalysisTaskSigma0PCMPHOS"; // creates a folder in the ROOT file
 
-	AliCaloResponse *task = new AliCaloResponse(name.Data());
+	AliAnalysisTaskSigma0PCMPHOS *task = new AliAnalysisTaskSigma0PCMPHOS(name.Data());
 	if (!task) return 0x0;
 	mgr->AddTask(task);
-	task->SelectCollisionCandidates(AliVEvent::kINT7); // minimum vias trigger for multiplicity calculations
+	task->SelectCollisionCandidates(AliVEvent::kINT7); // minimum vias trigger V0M
 	mgr->ConnectInput(task, 0, mgr->GetCommonInputContainer());
 	mgr->ConnectOutput(task, 1, mgr->CreateContainer("Histograms", TList::Class(), AliAnalysisManager::kOutputContainer, fileName.Data()));
 
